@@ -12,6 +12,8 @@ class NewsletterMail extends Mailable
         $this->params   = $params;
         $this->receiver = $receiver;
         $this->subject  = $subject;
+        
+        $this->params['receiver'] = $receiver;
     }
 
     public function build()
