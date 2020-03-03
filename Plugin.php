@@ -2,8 +2,14 @@
 
 use System\Classes\PluginBase;
 use Backend;
+use BackendAuth;
 use Event;
+use Db;
 use Indikator\News\Models\Posts;
+use Indikator\News\Models\Settings;
+use Indikator\News\Controllers\Posts as PostsController;
+use Backend\Models\User;
+use Config;
 
 class Plugin extends PluginBase
 {
@@ -27,44 +33,50 @@ class Plugin extends PluginBase
                 'icon'        => 'icon-newspaper-o',
                 'iconSvg'     => 'plugins/indikator/news/assets/images/news-icon.svg',
                 'permissions' => ['indikator.news.*'],
-                'order'       => 201,
+                'order'       => 320,
 
                 'sideMenu' => [
                     'posts' => [
                         'label'       => 'indikator.news::lang.menu.posts',
                         'url'         => Backend::url('indikator/news/posts'),
                         'icon'        => 'icon-file-text',
-                        'permissions' => ['indikator.news.posts']
+                        'permissions' => ['indikator.news.posts'],
+                        'order'       => 100
                     ],
                     'categories' => [
                         'label'       => 'indikator.news::lang.menu.categories',
                         'url'         => Backend::url('indikator/news/categories'),
                         'icon'        => 'icon-tags',
-                        'permissions' => ['indikator.news.categories']
+                        'permissions' => ['indikator.news.categories'],
+                        'order'       => 200
                     ],
                     'subscribers' => [
                         'label'       => 'indikator.news::lang.menu.subscribers',
                         'url'         => Backend::url('indikator/news/subscribers'),
                         'icon'        => 'icon-user',
-                        'permissions' => ['indikator.news.subscribers']
+                        'permissions' => ['indikator.news.subscribers'],
+                        'order'       => 300
                     ],
                     'statistics' => [
                         'label'       => 'indikator.news::lang.menu.statistics',
                         'url'         => Backend::url('indikator/news/statistics'),
                         'icon'        => 'icon-area-chart',
-                        'permissions' => ['indikator.news.statistics']
+                        'permissions' => ['indikator.news.statistics'],
+                        'order'       => 400
                     ],
                     'logs' => [
                         'label'       => 'indikator.news::lang.menu.logs',
                         'url'         => Backend::url('indikator/news/logs'),
                         'icon'        => 'icon-bar-chart',
-                        'permissions' => ['indikator.news.logs']
+                        'permissions' => ['indikator.news.logs'],
+                        'order'       => 500
                     ],
                     'settings' => [
                         'label'       => 'indikator.news::lang.menu.settings',
                         'url'         => Backend::url('system/settings/update/indikator/news/settings'),
                         'icon'        => 'icon-cogs',
-                        'permissions' => ['indikator.news.settings']
+                        'permissions' => ['indikator.news.settings'],
+                        'order'       => 600
                     ]
                 ]
             ]
@@ -91,20 +103,24 @@ class Plugin extends PluginBase
     {
         return [
             'Indikator\News\ReportWidgets\Posts' => [
-                'label'   => 'indikator.news::lang.widget.posts',
-                'context' => 'dashboard'
+                'label'       => 'indikator.news::lang.widget.posts',
+                'context'     => 'dashboard',
+                'permissions' => ['indikator.news.posts']
             ],
             'Indikator\News\ReportWidgets\NewPosts' => [
-                'label'   => 'indikator.news::lang.widget.newposts',
-                'context' => 'dashboard'
+                'label'       => 'indikator.news::lang.widget.newposts',
+                'context    ' => 'dashboard',
+                'permissions' => ['indikator.news.posts']
             ],
             'Indikator\News\ReportWidgets\TopPosts' => [
-                'label'   => 'indikator.news::lang.widget.topposts',
-                'context' => 'dashboard'
+                'label'       => 'indikator.news::lang.widget.topposts',
+                'context'     => 'dashboard',
+                'permissions' => ['indikator.news.posts']
             ],
             'Indikator\News\ReportWidgets\Subscribers' => [
-                'label'   => 'indikator.news::lang.widget.subscribers',
-                'context' => 'dashboard'
+                'label'       => 'indikator.news::lang.widget.subscribers',
+                'context'     => 'dashboard',
+                'permissions' => ['indikator.news.subscribers']
             ]
         ];
     }
@@ -142,7 +158,9 @@ class Plugin extends PluginBase
     {
         return [
             'indikator.news::mail.email_en' => 'E-mail',
-            'indikator.news::mail.email_hu' => 'E-mail'
+            'indikator.news::mail.email_hu' => 'E-mail',
+            'indikator.news::mail.confirmation_hu' => 'E-mail',
+            'indikator.news::mail.confirmation_en' => 'E-mail'
         ];
     }
 
@@ -196,11 +214,70 @@ class Plugin extends PluginBase
 
     public function registerSchedule($schedule)
     {
-        $schedule->command('queue:work --daemon --queue=newsletter')->everyMinute()->withoutOverlapping();
+        $memory = (int)Config::get('indikator.news::memory_limit');
+        $schedule->command('queue:work --daemon --queue=newsletter --memory=' . $memory)->everyMinute()->withoutOverlapping();
     }
 
     public function boot()
     {
+        /**
+        * Hide unused form fields
+        */
+        PostsController::extendFormFields(function($form, $model, $context)
+        {
+            if (!$model instanceof Posts) {
+                return;
+            }
+
+            $settings = json_decode(Db::table('system_settings')->where('item', 'indikator_news_settings')->value('value'));
+            $admin    = BackendAuth::getUser();
+
+            if (isset($settings->fields_slug) && !$settings->fields_slug) {
+                $form->removeField('slug');
+            }
+            if (isset($settings->fields_category) && !$settings->fields_category) {
+                $form->removeField('category');
+            }
+            if (isset($settings->fields_tags) && !$settings->fields_tags) {
+                $form->removeField('tags');
+            }
+            if (!isset($settings->fields_author) || (isset($settings->fields_author) && !$settings->fields_author)) {
+                $form->removeField('user');
+            }
+            if (!isset($settings->fields_seo) || (isset($settings->fields_seo) && !$settings->fields_seo)) {
+                $form->removeField('seo_title');
+                $form->removeField('seo_keywords');
+                $form->removeField('seo_desc');
+                $form->removeField('seo_image');
+            }
+        });
+
+        PostsController::extendListColumns(function($list, $model)
+        {
+            if (!$model instanceof Posts) {
+                return;
+            }
+
+            $settings = json_decode(Db::table('system_settings')->where('item', 'indikator_news_settings')->value('value'));
+            $admin    = BackendAuth::getUser();
+
+            if (isset($settings->fields_slug) && !$settings->fields_slug) {
+                $list->removeColumn('slug');
+            }
+            if (isset($settings->fields_category) && !$settings->fields_category) {
+                $list->removeColumn('category');
+            }
+            if (isset($settings->fields_tags) && !$settings->fields_tags) {
+                $list->removeColumn('tags');
+            }
+            if (!isset($settings->fields_author) || (isset($settings->fields_author) && !$settings->fields_author)) {
+                $list->removeColumn('user');
+            }
+        });
+
+        /**
+        * Extensions for Sitemap
+        */
         Event::listen('pages.menuitem.listTypes', function()
         {
             return [
@@ -221,6 +298,17 @@ class Plugin extends PluginBase
             if ($type == 'post-list' || $type == 'post-page') {
                 return Posts::resolveMenuItem($item, $url, $theme);
             }
+        });
+
+        /**
+        * Attach posts relationship to backend user model as extension
+        */
+        User::extend(function($model)
+        {
+            $model->hasMany['posts'] = [
+                'Indikator\News\Models\Posts',
+                'key' => 'user_id'
+            ];
         });
     }
 }

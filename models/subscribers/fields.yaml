@@ -6,36 +6,47 @@ fields:
 
     name:
         label: indikator.news::lang.form.name
-        span: auto
+        attributes:
+           autofocus: ''
+        span: storm
+        cssClass: col-lg-6
 
     email:
         label: indikator.news::lang.form.email
         required: true
-        span: auto
+        span: storm
+        cssClass: col-lg-6
 
     categories:
         label: indikator.news::lang.menu.categories
         type: relation
-        comment: indikator.news::lang.form.categories_comment
-        span: auto
+        span: storm
+        cssClass: col-lg-6
 
     common:
         label: indikator.news::lang.form.comment
         type: textarea
         size: small
-        span: auto
+        span: storm
+        cssClass: col-lg-6
 
 secondaryTabs:
+
     fields:
 
         subscriberinfo:
             type: subscriberinfo
             context: update
+            span: storm
+            cssClass: col-xs-12
 
         locale:
             label: indikator.news::lang.form.locale
             placeholder: indikator.news::lang.form.lang
             comment: indikator.news::lang.form.locale_comment
+            commentHtml: true
+            span: storm
+            cssClass: col-xs-12
 
         status:
             label: indikator.news::lang.form.status
@@ -46,3 +57,5 @@ secondaryTabs:
                 2: indikator.news::lang.form.status_unsubscribed
                 3: indikator.news::lang.form.status_pending
             default: 1
+            span: storm
+            cssClass: col-xs-12

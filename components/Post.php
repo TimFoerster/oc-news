@@ -31,7 +31,17 @@ class Post extends ComponentBase
 
     public function onRun()
     {
-        $this->post = $this->page['post'] = $this->loadPost();
+        $post = $this->loadPost();
+
+        if (!$post) {
+            return Redirect::to('404');
+        }
+
+        if (!BackendAuth::check()) {
+            NewsPost::find($post->id)->increment('statistics');
+        }
+
+        $this->post = $this->page['post'] = $post;
     }
 
     protected function loadPost()
@@ -44,24 +54,36 @@ class Post extends ComponentBase
             ? $post->transWhere('slug', $slug)
             : $post->where('slug', $slug);
 
-        $post = $post->isPublished();
+        $post = $post->isPublished()->first();
 
-        if ($post->count() == 0 || !$post = $post->first()) {
-            return Redirect::to('404');
+        if (!$post) {
+            return $post;
         }
-
-        if (!BackendAuth::check()) {
-            NewsPost::where('slug', $slug)->increment('statistics');
-        }
+        $post->tags = explode(',', $post->tags);
 
         $meta_description = strip_tags($post->introductory);
         if (strlen($meta_description) > 252) {
             $meta_description = substr($meta_description, 0, 252).'...';
         }
 
+        $post->setUrl($this->postPage, $this->controller);
+
+        // General SEO Tags
         $this->page->title = $post->title;
         $this->page->meta_title = $post->title;
         $this->page->meta_description = $meta_description;
+        $this->page->meta_canonical = $post->url;
+        $this->page->meta_image_src = $post->image;
+
+        // Create keyword list, from category name and tag list.
+        $post_keywords = $post->category->name.', ';
+        foreach ($post->tags as $key => $tag) {
+            $post_keywords .= $tag;
+            if ($key != (count($post->tags) - 1)) {
+                $post_keywords .= ', ';
+            }
+        }
+        $this->page->meta_keywords = $post_keywords;
 
         return $post;
     }

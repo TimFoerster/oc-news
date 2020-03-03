@@ -28,7 +28,7 @@ return [
         'subscribers' => 'Nowy subskrybent'
     ],
     'stat' => [
-        'posts' => 'post|blogach',
+        'posts' => 'blogach',
         'view' => 'widok',
         'mail' => 'Zapisane',
         'loss' => 'Utrata',
@@ -59,6 +59,7 @@ return [
         'content' => 'Treść',
         'image' => 'Obrazek',
         'category' => 'Kategoria',
+        'author' => 'Autor',
         'status' => 'Status',
         'status_published' => 'Opublikowany',
         'status_hide' => 'Ukryty',
@@ -74,6 +75,11 @@ return [
         'published_at' => 'Opublikowany',
         'send' => 'Wyślij e-mail do subskrybentów.',
         'length' => 'Długość',
+        'seo_tab' => 'SEO ustawienia',
+        'seo_title' => 'Tytuł',
+        'seo_keywords' => 'Słowa kluczowe',
+        'seo_desc' => 'Opis',
+        'seo_image' => 'OG obraz',
         // Inscritos
         'name' => 'Imię',
         'email' => 'E-mail',

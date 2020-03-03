@@ -29,7 +29,42 @@ foreach ($pages as $page) {
 <?php Block::endPut() ?>
 
 <?php if (!$this->fatalError): ?>
+
     <?php Block::put('form-contents') ?>
+
+        <style type="text/css">
+            .field-datepicker .col-md-6 {
+                float: left;
+                width: 148px;
+            }
+            .field-datepicker .col-md-6:nth-child(2) {
+                width: 112px;
+            }
+            .field-datepicker .icon {
+                top: -2px;
+            }
+            .btn {
+                margin: 8px 0;
+            }
+            .form-buttons button,
+            .form-buttons .btn-text {
+                position: relative;
+                top: 5px;
+            }
+            .form-buttons .cancel {
+                position: relative;
+                top: 0;
+            }
+            .form-buttons .btn-icon {
+                position: relative;
+                top: 12px;
+            }
+            .form-buttons span a {
+                position: relative;
+                top: 8px;
+            }
+        </style>
+
         <div class="layout-row min-size">
             <?= $this->formRenderOutsideFields() ?>
         </div>
@@ -37,7 +72,7 @@ foreach ($pages as $page) {
             <?= $this->formRenderPrimaryTabs() ?>
         </div>
 
-        <div class="form-buttons">
+        <div class="form-buttons" style="padding: 20px 15px;">
             <div class="loading-indicator-container">
                 <button
                     type="submit"
@@ -56,6 +91,12 @@ foreach ($pages as $page) {
                     data-load-indicator="<?= e(trans('backend::lang.form.saving_name', ['name'=>$formRecordName])) ?>"
                     class="btn btn-default">
                     <?= e(trans('backend::lang.form.save_and_close')) ?>
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-default"
+                    onclick="$('#RichEditor-formNewsletterContent-textarea-newsletter_content').froalaEditor('html.set', $('#RichEditor-formContent-textarea-content').froalaEditor('html.get'));">
+                    <?= e(trans('indikator.news::lang.button.copy_content_to_newsletter')) ?>
                 </button>
                 <button
                     type="button"
@@ -86,7 +127,7 @@ foreach ($pages as $page) {
                 <?php endif ?>
                 <?= $this->fireViewEvent('indikator.news.extendPostUpdateViewButtons', [$formModel]) ?>
                 <span class="btn-text">
-                    <?= e(trans('backend::lang.form.or')) ?> <a href="<?= Backend::url('indikator/news/posts') ?>"><?= e(trans('backend::lang.form.cancel')) ?></a>
+                    <?= e(trans('backend::lang.form.or')) ?> <a href="<?= Backend::url('indikator/news/posts') ?>" class="cancel"><?= e(trans('backend::lang.form.cancel')) ?></a>
                 </span>
                 <?php if ($next): ?>
                 <a
@@ -111,15 +152,15 @@ foreach ($pages as $page) {
                     class="oc-icon-trash-o btn-icon danger pull-right">
                 </button>
                 <button
-                        data-request="onClonePosts"
-                        data-request-data="id:<?= $formModel->id?>"
-                        data-load-indicator="<?= e(trans('indikator.news::lang.form.news_cloning', ['name'=>$formModel->title])) ?>"
-                        data-request-confirm="<?= e(trans('indikator.news::lang.flash.news_clone_confirm')) ?>"
-                        class="oc-icon-clone btn-icon pull-right">
+                    data-request="onClonePosts"
+                    data-request-data="id:<?= $formModel->id?>"
+                    data-load-indicator="<?= e(trans('indikator.news::lang.form.news_cloning', ['name'=>$formModel->title])) ?>"
+                    data-request-confirm="<?= e(trans('indikator.news::lang.flash.news_clone_confirm')) ?>"
+                    class="oc-icon-clone btn-icon pull-right">
                 </button>
                 <?php if (isset($url)): ?>
                 <span class="btn-text pull-right">
-                    <a href="<?= $url.$formModel->slug ?>" target="_blank"><?= e(trans('cms::lang.editor.preview')) ?></a>
+                    <a href="<?= Url::to('/').$url.$formModel->slug ?>" target="_blank"><?= e(trans('cms::lang.editor.preview')) ?></a>
                 </span>
                 <?php endif ?>
             </div>
